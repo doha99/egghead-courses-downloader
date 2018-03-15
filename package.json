@@ -1,0 +1,20 @@
+{
+  "name": "egghead-courses-downloader",
+  "version": "1.0.0",
+  "description": "Download all videos from a course of egghead.io",
+  "main": "app/cli.js",
+  "repository": "https://github.com/doha99/egghead-courses-downloader.git",
+  "author": "DoHa",
+  "license": "MIT",
+  "scripts": {
+    "download": "node app/cli"
+  },
+  "dependencies": {
+    "async": "^2.6.0",
+    "cheerio": "^1.0.0-rc.2",
+    "commander": "^2.15.0",
+    "dotenv": "^5.0.1",
+    "lodash": "^4.17.5",
+    "request": "^2.85.0"
+  }
+}
