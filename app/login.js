@@ -25,7 +25,9 @@ function getCsrfToken(url) {
 function postLogin() {
     console.log(`Start to login with ${config.email}`)
     var loginUrl = config.url + config.login_path
-    
+
+    console.log(`login url = ${loginUrl}`)
+
     return getCsrfToken(loginUrl)
         .then(token => {
             if (!token) return
@@ -43,7 +45,7 @@ function postLogin() {
                 }, function(err, response, body) {
                     if (err) {
                         console.log(err)
-                    } 
+                    }
                     else if (response && response.statusCode === 302) {
                         console.log('Login successfully.')
                         resolve('ok')
@@ -51,7 +53,7 @@ function postLogin() {
                 })
             })
 
-            return promise            
+            return promise
         })
 }
 

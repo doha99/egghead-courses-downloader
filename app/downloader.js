@@ -6,25 +6,22 @@ var async = require('async')
 var path = require('path')
 var request = require('request')
 
-function fetchLinks(url) {
+function fetchLinks(url, courseName) {
     return fetcher.fetchHtmlPage(url)
         .then(({ body , response }) => {
             if (response.statusCode !== 200) {
                 return []
             }
-            $ = cheerio.load(body)
 
-            if ($('a[href="/pricing?from=go-pro-nav"]').length > 0) {
+            var lessonList = JSON.parse(body)
+            if (lessonList.length == 0 || !lessonList[0].download_url) {
                 console.error('Should to login first')
-                return []
+                return { lessons: [], courseName }
             }
 
-            var parts = url.split('/')
-            var courseName = parts[parts.length - 1]
-
-            var lessons = Array.from($('a[href*="/lessons/"][id]')).map((value, index) => {
+            var lessons = lessonList.map((lessonObject, index) => {
                 return {
-                    href: config.url + $(value).attr('href'),
+                    href: lessonObject.download_url,
                     course: courseName,
                     index: ('0' + (index + 1)).substr(-2)
                 }
@@ -38,13 +35,8 @@ function getVideoDetails(lesson, callback) {
     fetcher.fetchHtmlPage(lesson.href)
         .then(({ body, response }) => {
             if (response.statusCode !== 200) return;
-            var $ = cheerio.load(body)
-            var json = JSON.parse($('.js-react-on-rails-component').html())
-            fetcher.fetchHtmlPage(json.lesson.download_url)
-                .then(({ body }) => {
-                    lesson.downloadLink = body
-                    callback(null, lesson)
-                })
+            lesson.downloadLink = body
+            callback(null, lesson)
         })
 }
 
@@ -72,12 +64,20 @@ function downloadCourse(url) {
     if (! fs.existsSync(folderPath)) {
         fs.mkdirSync(folderPath)
     }
-    fetchLinks(url)
+    var parts = url.split('/')
+    var courseName = parts[parts.length - 1]
+    url = url.replace('egghead.io/', 'egghead.io/api/v1/') + '/lessons'
+    url = url.replace('/courses/', '/series/')
+    console.log(`lessons url = ${url}`)
+    console.log(`course name = ${courseName}`)
+    fetchLinks(url, courseName)
         .then(({lessons, courseName}) => {
+            if (lessons.length == 0) return
+
             var tasks = lessons.map((lesson) => {
                 return function(callback) {
                     getVideoDetails(lesson, callback)
-                }                
+                }
             })
             var folderPath = path.join(__dirname, '../downloads/' + courseName)
             if (! fs.existsSync(folderPath)) {
